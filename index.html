@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WhatsApp Business Catalog</title>
+  <meta name="description"
+    content="Browse curated WhatsApp business catalogs — discover products from verified sellers." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0d0f14;
+      --surface: #13161e;
+      --card: #1a1d27;
+      --card-hover: #1f2335;
+      --border: rgba(255, 255, 255, 0.07);
+      --accent: #25d366;
+      --accent2: #128c7e;
+      --accent-glow: rgba(37, 211, 102, 0.18);
+      --text: #e8eaf0;
+      --muted: #6b7280;
+      --badge: rgba(37, 211, 102, 0.15);
+      --header-bg: rgba(13, 15, 20, 0.85);
+      --hero-text-gradient: linear-gradient(135deg, #fff 40%, rgba(37, 211, 102, 0.8));
+    }
+
+    body.light-mode {
+      --bg: #f7f8fa;
+      --surface: #ffffff;
+      --card: #ffffff;
+      --card-hover: #f0f2f5;
+      --border: rgba(0, 0, 0, 0.08);
+      --accent: #25d366;
+      --accent2: #128c7e;
+      --accent-glow: rgba(37, 211, 102, 0.1);
+      --text: #111b21;
+      --muted: #667781;
+      --badge: rgba(37, 211, 102, 0.15);
+      --header-bg: rgba(247, 248, 250, 0.85);
+      --hero-text-gradient: linear-gradient(135deg, #111b21 40%, #128c7e);
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    /* ── HEADER ── */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--header-bg);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      transition: background 0.3s ease, border-color 0.3s ease;
+    }
+
+    .header-inner {
+      max-width: 1280px;
+      margin: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 1.15rem;
+      letter-spacing: -0.02em;
+    }
+
+    .logo-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+    }
+
+    .header-stats {
+      display: flex;
+      gap: 1.5rem;
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .header-stats span {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      display: inline-block;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      text-align: center;
+      padding: 5rem 2rem 3rem;
+      background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(37, 211, 102, 0.08) 0%, transparent 70%);
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--badge);
+      border: 1px solid rgba(37, 211, 102, 0.3);
+      color: var(--accent);
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 5px 14px;
+      border-radius: 999px;
+      margin-bottom: 1.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1.1;
+      margin-bottom: 1rem;
+      background: var(--hero-text-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      color: var(--muted);
+      font-size: 1.05rem;
+      max-width: 500px;
+      margin: auto;
+      line-height: 1.7;
+    }
+
+    /* ── THEME SWITCHER ── */
+    .theme-toggle-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      cursor: pointer;
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .theme-toggle-btn:hover {
+      border-color: var(--accent);
+      transform: scale(1.05);
+      background: var(--card-hover);
+    }
+
+    /* ── SEARCH + NAV ── */
+    .controls {
+      max-width: 1280px;
+      margin: 2rem auto 0;
+      padding: 0 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .search-wrap {
+      flex: 1;
+      min-width: 220px;
+      position: relative;
+    }
+
+    .search-wrap input {
+      width: 100%;
+      padding: 0.65rem 1rem 0.65rem 2.6rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.88rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-wrap input:focus {
+      border-color: var(--accent);
+    }
+
+    .search-wrap::before {
+      content: "🔍";
+      position: absolute;
+      left: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.8rem;
+      pointer-events: none;
+    }
+
+    .biz-tabs {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .biz-tab {
+      padding: 0.5rem 1.1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      font-family: inherit;
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .biz-tab:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .biz-tab.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #000;
+      font-weight: 700;
+    }
+
+    /* ── MAIN CONTENT ── */
+    main {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 2.5rem 2rem 4rem;
+    }
+
+    /* ── BUSINESS SECTION ── */
+    .biz-section {
+      margin-bottom: 3.5rem;
+    }
+
+    .biz-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .biz-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--accent2), var(--accent));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: #000;
+      flex-shrink: 0;
+    }
+
+    .biz-info h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .biz-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-top: 3px;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .biz-badge {
+      background: var(--badge);
+      border: 1px solid rgba(37, 211, 102, 0.25);
+      color: var(--accent);
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+
+    .no-products {
+      padding: 2rem;
+      text-align: center;
+      color: var(--muted);
+      background: var(--surface);
+      border: 1px dashed var(--border);
+      border-radius: 14px;
+      font-size: 0.88rem;
+    }
+
+    /* ── PRODUCT GRID ── */
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 1.25rem;
+    }
+
+    /* ── PRODUCT CARD ── */
+    .product-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+      display: flex;
+      flex-direction: column;
+      cursor: pointer;
+    }
+
+    .product-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(37, 211, 102, 0.35);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(37, 211, 102, 0.1);
+    }
+
+    .product-img-wrap {
+      position: relative;
+      aspect-ratio: 1/1;
+      overflow: hidden;
+      background: var(--surface);
+    }
+
+    .product-img-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.4s ease;
+    }
+
+    .product-card:hover .product-img-wrap img {
+      transform: scale(1.06);
+    }
+
+    .img-nav {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 4px;
+    }
+
+    .img-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.4);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .img-dot.active {
+      background: var(--accent);
+    }
+
+    .stock-tag {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(37, 211, 102, 0.9);
+      color: #000;
+      font-size: 0.62rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 6px;
+      letter-spacing: 0.05em;
+    }
+
+    .product-body {
+      padding: 1rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .product-name {
+      font-weight: 600;
+      font-size: 0.9rem;
+      line-height: 1.35;
+      letter-spacing: -0.01em;
+    }
+
+    .product-desc {
+      font-size: 0.75rem;
+      color: var(--muted);
+      line-height: 1.55;
+      flex: 1;
+    }
+
+    .product-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 0.5rem;
+      gap: 0.5rem;
+    }
+
+    .product-price {
+      font-weight: 700;
+      font-size: 0.88rem;
+      color: var(--accent);
+    }
+
+    .product-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--accent);
+      text-decoration: none;
+      padding: 4px 10px;
+      border: 1px solid rgba(37, 211, 102, 0.3);
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+
+    .product-link:hover {
+      background: var(--accent);
+      color: #000;
+    }
+
+    /* ── LIGHTBOX ── */
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      background: rgba(0, 0, 0, 0.88);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+
+    .lightbox.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .lightbox-img {
+      max-width: 90vw;
+      max-height: 85vh;
+      border-radius: 12px;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+    }
+
+    .lightbox-close {
+      position: absolute;
+      top: 1.5rem;
+      right: 1.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: #fff;
+      font-size: 1.4rem;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+
+    .lightbox-close:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* ── EMPTY STATE ── */
+    #empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--muted);
+      display: none;
+    }
+
+    #empty-state .emoji {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center;
+      padding: 2rem;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
+    }
+
+    @media (max-width: 600px) {
+      .header-stats {
+        display: none;
+      }
+
+      .hero {
+        padding: 3rem 1.25rem 2rem;
+      }
+
+      .controls {
+        flex-direction: column;
+      }
+
+      .biz-tabs {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        padding-bottom: 4px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-inner">
+      <div class="logo">
+        <div class="logo-icon">💬</div>
+        <span>WA Catalog</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 1.25rem;">
+        <div class="header-stats" id="header-stats"></div>
+        <button id="theme-toggle" class="theme-toggle-btn" title="Toggle dark/light mode">☀️</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-badge"><span class="dot"></span> WhatsApp Verified</div>
+    <h1>Business Catalog<br>Marketplace</h1>
+    <p>Browse products from verified WhatsApp Business sellers — all in one place.</p>
+  </section>
+
+  <!-- CONTROLS -->
+  <div class="controls">
+    <div class="search-wrap">
+      <input id="search-input" type="text" placeholder="Search products…" aria-label="Search products" />
+    </div>
+    <div class="biz-tabs" id="biz-tabs" role="tablist"></div>
+  </div>
+
+  <!-- MAIN -->
+  <main id="main-content"></main>
+  <div id="empty-state">
+    <div class="emoji">🔍</div>
+    <p>No products match your search.</p>
+  </div>
+
+  <!-- LIGHTBOX -->
+  <div class="lightbox" id="lightbox" role="dialog" aria-label="Image preview">
+    <button class="lightbox-close" id="lightbox-close" aria-label="Close">✕</button>
+    <img class="lightbox-img" id="lightbox-img" src="" alt="Product image" />
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>Powered by <a href="https://whapi.cloud" target="_blank" rel="noopener">Whapi</a> · WhatsApp Business Catalog</p>
+  </footer>
+
+  <script>
+    // ── Helpers ──────────────────────────────────────────────────────────────────
+    function formatDesc(raw) {
+      if (!raw) return '';
+      // strip WhatsApp bold (*text*) and clean up line breaks
+      return raw
+        .replace(/\*([^*]+)\*/g, '<strong>$1</strong>')
+        .replace(/\r\n|\r/g, '\n')
+        .replace(/\n/g, '<br>');
+    }
+
+    function initials(name) {
+      return name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    }
+
+    // ── State ────────────────────────────────────────────────────────────────────
+    let catalogData = {};
+    let activeFilter = 'all';
+    let searchQuery = '';
+
+    // ── Lightbox ─────────────────────────────────────────────────────────────────
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightbox-img');
+    document.getElementById('lightbox-close').addEventListener('click', closeLightbox);
+    lightbox.addEventListener('click', e => { if (e.target === lightbox) closeLightbox(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+    function openLightbox(src) {
+      lightboxImg.src = src;
+      lightbox.classList.add('open');
+    }
+    function closeLightbox() {
+      lightbox.classList.remove('open');
+    }
+
+    // ── Render ───────────────────────────────────────────────────────────────────
+    function buildProductCard(product) {
+      // Each product has 2 URLs per image: [0] = 100x100 thumbnail (has stp=), [1] = full-res.
+      // Use only the full-resolution URLs (no stp= param), falling back to all if none found.
+      const rawImages = product.images || [];
+      const fullRes = rawImages.filter(url => !url.includes('stp='));
+      const images = fullRes.length > 0 ? fullRes : rawImages;
+      const hasImages = images.length > 0;
+      const hasUrl = product.url;
+      const price = product.price != null ? `₹${product.price}` : '';
+
+      const imgHTML = hasImages
+        ? `<img src="${images[0]}" alt="${product.name}" loading="lazy"
+           onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'200\\' height=\\'200\\'%3E%3Crect width=\\'200\\' height=\\'200\\' fill=\\'%231a1d27\\'/%3E%3Ctext x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' fill=\\'%236b7280\\' font-size=\\'13\\' dy=\\'.3em\\'%3ENo image%3C/text%3E%3C/svg%3E'" />`
+        : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:0.8rem;">No image</div>`;
+
+      const dotsHTML = images.length > 1
+        ? `<div class="img-nav">${images.map((_, i) =>
+          `<span class="img-dot ${i === 0 ? 'active' : ''}" data-idx="${i}"></span>`
+        ).join('')}</div>`
+        : '';
+
+      const stockHTML = product.availability === 'in stock'
+        ? `<span class="stock-tag">In Stock</span>` : '';
+
+      const linkHTML = hasUrl
+        ? `<a class="product-link" href="${product.url}" target="_blank" rel="noopener">View ↗</a>` : '';
+
+      return `
+    <article class="product-card" id="p-${product.id}" data-name="${product.name.toLowerCase()}" data-desc="${(product.description || '').toLowerCase()}">
+      <div class="product-img-wrap" data-images='${JSON.stringify(images)}'>
+        ${imgHTML}
+        ${stockHTML}
+        ${dotsHTML}
+      </div>
+      <div class="product-body">
+        <div class="product-name">${product.name}</div>
+        <div class="product-desc">${formatDesc(product.description)}</div>
+        <div class="product-footer">
+          <span class="product-price">${price}</span>
+          ${linkHTML}
+        </div>
+      </div>
+    </article>`;
+    }
+
+    function buildBusinessSection(bizName, bizData) {
+      const products = bizData.products || [];
+      const total = bizData.total ?? products.length;
+      const slug = bizName.replace(/\s+/g, '-').toLowerCase();
+
+      const gridHTML = products.length === 0
+        ? `<div class="no-products">No products listed for this business yet.</div>`
+        : `<div class="product-grid">${products.map(buildProductCard).join('')}</div>`;
+
+      return `
+    <section class="biz-section" id="biz-${slug}" data-biz="${bizName.toLowerCase()}">
+      <div class="biz-header">
+        <div class="biz-avatar">${initials(bizName)}</div>
+        <div class="biz-info">
+          <h2>${bizName}</h2>
+          <div class="biz-meta">
+            <span class="biz-badge">✓ WhatsApp Business</span>
+            <span>${total} product${total !== 1 ? 's' : ''}</span>
+          </div>
+        </div>
+      </div>
+      ${gridHTML}
+    </section>`;
+    }
+
+    function render() {
+      const main = document.getElementById('main-content');
+      const empty = document.getElementById('empty-state');
+      const q = searchQuery.toLowerCase();
+
+      let rendered = 0;
+
+      const html = Object.entries(catalogData).map(([name, data]) => {
+        // filter by active tab
+        if (activeFilter !== 'all' && name.toLowerCase() !== activeFilter) return '';
+
+        // filter products by search
+        let products = data.products || [];
+        if (q) {
+          products = products.filter(p =>
+            p.name.toLowerCase().includes(q) ||
+            (p.description || '').toLowerCase().includes(q)
+          );
+        }
+
+        const filteredData = { ...data, products };
+
+        // if searching and a business has no matching products, hide section entirely
+        if (q && products.length === 0) return '';
+
+        rendered++;
+        return buildBusinessSection(name, filteredData);
+      }).join('');
+
+      main.innerHTML = html;
+      empty.style.display = rendered === 0 ? 'block' : 'none';
+
+      // attach image cycling listeners
+      attachImageCyclers();
+      attachLightboxListeners();
+    }
+
+    function attachImageCyclers() {
+      document.querySelectorAll('.product-img-wrap').forEach(wrap => {
+        const images = JSON.parse(wrap.getAttribute('data-images') || '[]');
+        if (images.length < 2) return;
+
+        const img = wrap.querySelector('img');
+        const dots = wrap.querySelectorAll('.img-dot');
+        let current = 0;
+
+        function showImg(idx) {
+          current = idx;
+          img.src = images[idx];
+          dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+        }
+
+        dots.forEach((dot, i) => {
+          dot.addEventListener('click', e => { e.stopPropagation(); showImg(i); });
+        });
+
+        // auto-cycle on hover
+        let timer;
+        wrap.addEventListener('mouseenter', () => {
+          timer = setInterval(() => showImg((current + 1) % images.length), 1200);
+        });
+        wrap.addEventListener('mouseleave', () => {
+          clearInterval(timer); showImg(0);
+        });
+      });
+    }
+
+    function attachLightboxListeners() {
+      document.querySelectorAll('.product-img-wrap img').forEach(img => {
+        img.addEventListener('click', () => openLightbox(img.src));
+        img.style.cursor = 'zoom-in';
+      });
+    }
+
+    // ── Tab rendering ─────────────────────────────────────────────────────────────
+    function buildTabs() {
+      const container = document.getElementById('biz-tabs');
+      const names = Object.keys(catalogData);
+
+      const allTab = `<button class="biz-tab active" data-filter="all" id="tab-all">All Businesses</button>`;
+      const bizTabs = names.map(name => {
+        const filter = name.toLowerCase();
+        return `<button class="biz-tab" data-filter="${filter}" id="tab-${filter.replace(/\s+/g, '-')}">${name}</button>`;
+      }).join('');
+
+      container.innerHTML = allTab + bizTabs;
+
+      container.querySelectorAll('.biz-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+          container.querySelectorAll('.biz-tab').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          activeFilter = btn.dataset.filter;
+          render();
+          // scroll to section if specific biz
+          if (activeFilter !== 'all') {
+            const slug = activeFilter.replace(/\s+/g, '-');
+            const el = document.getElementById(`biz-${slug}`);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        });
+      });
+    }
+
+    // ── Header stats ──────────────────────────────────────────────────────────────
+    function buildStats() {
+      const businesses = Object.keys(catalogData).length;
+      const nonempty = Object.values(catalogData).filter(d => (d.products || []).length > 0).length;
+      const products = Object.values(catalogData).reduce((s, d) => s + (d.products || []).length, 0);
+      document.getElementById('header-stats').innerHTML = `
+    <span><span class="dot"></span> ${nonempty} / ${businesses} Catalogs Not Empty</span>
+    <span>·</span>
+    <span>${products} Products</span>`;
+    }
+
+    // ── Theme Switcher ────────────────────────────────────────────────────────────
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    const savedTheme = localStorage.getItem('theme');
+    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+    if (savedTheme === 'light' || (!savedTheme && !systemPrefersDark)) {
+      document.body.classList.add('light-mode');
+      themeToggleBtn.textContent = '🌙';
+    } else {
+      themeToggleBtn.textContent = '☀️';
+    }
+
+    themeToggleBtn.addEventListener('click', () => {
+      document.body.classList.toggle('light-mode');
+      const isLight = document.body.classList.contains('light-mode');
+      localStorage.setItem('theme', isLight ? 'light' : 'dark');
+      themeToggleBtn.textContent = isLight ? '🌙' : '☀️';
+    });
+
+    // ── Search ────────────────────────────────────────────────────────────────────
+    document.getElementById('search-input').addEventListener('input', e => {
+      searchQuery = e.target.value;
+      render();
+    });
+
+    // ── Load data ─────────────────────────────────────────────────────────────────
+    fetch('result.json')
+      .then(r => r.json())
+      .then(data => {
+        catalogData = data;
+        buildTabs();
+        buildStats();
+        render();
+      })
+      .catch(err => {
+        document.getElementById('main-content').innerHTML = `
+      <div style="text-align:center;padding:4rem;color:var(--muted);">
+        <div style="font-size:2.5rem;margin-bottom:1rem;">⚠️</div>
+        <p>Could not load <code>result.json</code>. Make sure the file is in the same folder.<br>
+        <small style="opacity:0.6">${err.message}</small></p>
+      </div>`;
+      });
+  </script>
+</body>
+
+</html>
