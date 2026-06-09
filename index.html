@@ -713,6 +713,80 @@
       .product-body { padding: 0.65rem; }
       .hero h1 { font-size: 1.6rem; }
     }
+
+    /* ── COPY CHIP ── */
+    .copy-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.7rem;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      padding: 2px 9px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      user-select: none;
+      vertical-align: middle;
+      line-height: 1.6;
+      white-space: nowrap;
+    }
+    .copy-chip:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-glow);
+    }
+    .copy-chip.copied {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-glow);
+    }
+
+    /* ── PHONE SUBGROUP ── */
+    .phone-group {
+      margin-bottom: 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .phone-group:last-child { margin-bottom: 0; }
+
+    .phone-group-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.55rem 0.9rem;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+    .phone-group-key {
+      font-size: 0.8rem;
+      font-weight: 700;
+      font-family: 'Courier New', monospace;
+      color: var(--text);
+      letter-spacing: 0.03em;
+    }
+    .phone-group-count {
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-left: auto;
+      white-space: nowrap;
+    }
+    .phone-group-body {
+      padding: 1rem;
+      background: var(--bg);
+    }
+
+    /* ── BIZ TITLE GLID CHIP ── */
+    .biz-info h2 {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
   </style>
 </head>
 
@@ -769,7 +843,6 @@
     // ── Helpers ──────────────────────────────────────────────────────────────────
     function formatDesc(raw) {
       if (!raw) return '';
-      // strip WhatsApp bold (*text*) and clean up line breaks
       return raw
         .replace(/\*([^*]+)\*/g, '<strong>$1</strong>')
         .replace(/\r\n|\r/g, '\n')
@@ -780,8 +853,39 @@
       return name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
     }
 
+    // ── Copy to clipboard ────────────────────────────────────────────────────────
+    function copyToClipboard(text, chipEl) {
+      navigator.clipboard.writeText(text).then(() => {
+        const original = chipEl.innerHTML;
+        chipEl.innerHTML = '✓ Copied!';
+        chipEl.classList.add('copied');
+        setTimeout(() => {
+          chipEl.innerHTML = original;
+          chipEl.classList.remove('copied');
+        }, 1500);
+      });
+    }
+
+    // ── Group raw output.json data by glid ───────────────────────────────────────
+    function groupByGlid(raw) {
+      const groups = {};
+      for (const [key, entry] of Object.entries(raw)) {
+        if (entry.__failed__) continue;
+        const glid = entry.glid || key.split('_')[0];
+        if (!groups[glid]) {
+          groups[glid] = {
+            glid,
+            business_name: entry.business_name || glid,
+            entries: {}
+          };
+        }
+        groups[glid].entries[key] = entry;
+      }
+      return groups;
+    }
+
     // ── State ────────────────────────────────────────────────────────────────────
-    let catalogData = {};
+    let groupedData = {}; // { glid: { glid, business_name, entries: { key: entry } } }
     let activeFilter = 'all';
     let searchQuery = '';
 
@@ -800,15 +904,12 @@
       lightbox.classList.remove('open');
     }
 
-    // ── Render ───────────────────────────────────────────────────────────────────
+    // ── Product card ─────────────────────────────────────────────────────────────
     function buildProductCard(product) {
-      // Each product has 2 URLs per image: [0] = 100x100 thumbnail (has stp=), [1] = full-res.
-      // Use only the full-resolution URLs (no stp= param), falling back to all if none found.
       const rawImages = product.images || [];
       const fullRes = rawImages.filter(url => !url.includes('stp='));
       const images = fullRes.length > 0 ? fullRes : rawImages;
       const hasImages = images.length > 0;
-      const hasUrl = product.url;
       const price = product.price != null ? `₹${product.price}` : '';
 
       const imgHTML = hasImages
@@ -825,7 +926,7 @@
       const stockHTML = product.availability === 'in stock'
         ? `<span class="stock-tag">In Stock</span>` : '';
 
-      const linkHTML = hasUrl
+      const linkHTML = product.url
         ? `<a class="product-link" href="${product.url}" target="_blank" rel="noopener">View ↗</a>` : '';
 
       return `
@@ -846,31 +947,75 @@
     </article>`;
     }
 
-    function buildBusinessSection(bizName, bizData) {
-      const products = bizData.products || [];
-      const total = bizData.total ?? products.length;
-      const slug = bizName.replace(/\s+/g, '-').toLowerCase();
+    // ── Phone subgroup (one per glid_phone key) ───────────────────────────────────
+    function buildPhoneGroup(key, entry, q) {
+      let products = entry.products || [];
+      if (q) {
+        products = products.filter(p =>
+          p.name.toLowerCase().includes(q) ||
+          (p.description || '').toLowerCase().includes(q)
+        );
+      }
 
-      const gridHTML = products.length === 0
-        ? `<div class="no-products">No products listed for this business yet.</div>`
+      const count = products.length;
+      const gridHTML = count === 0
+        ? `<div class="no-products">No products${q ? ' matching your search' : ''} for this number.</div>`
         : `<div class="product-grid">${products.map(buildProductCard).join('')}</div>`;
 
       return `
-    <section class="biz-section" id="biz-${slug}" data-biz="${bizName.toLowerCase()}">
+    <div class="phone-group">
+      <div class="phone-group-header">
+        <span class="phone-group-key">${key}</span>
+        <button class="copy-chip" onclick="copyToClipboard('${key}', this)" title="Copy key">📋 ${key}</button>
+        <span class="phone-group-count">${count} product${count !== 1 ? 's' : ''}</span>
+      </div>
+      <div class="phone-group-body">
+        ${gridHTML}
+      </div>
+    </div>`;
+    }
+
+    // ── Business section (groups all phone entries for one glid) ─────────────────
+    function buildBusinessSection(glid, bizGroup) {
+      const { business_name, entries } = bizGroup;
+      const q = searchQuery.toLowerCase();
+
+      const totalProducts = Object.values(entries)
+        .reduce((s, e) => s + (e.products || []).length, 0);
+      const numNumbers = Object.keys(entries).length;
+
+      const phoneGroupsHTML = Object.entries(entries).map(([key, entry]) => {
+        if (q) {
+          const has = (entry.products || []).some(p =>
+            p.name.toLowerCase().includes(q) ||
+            (p.description || '').toLowerCase().includes(q)
+          );
+          if (!has) return '';
+        }
+        return buildPhoneGroup(key, entry, q);
+      }).join('');
+
+      return `
+    <section class="biz-section" id="biz-${glid}" data-biz="${business_name.toLowerCase()}">
       <div class="biz-header">
-        <div class="biz-avatar">${initials(bizName)}</div>
+        <div class="biz-avatar">${initials(business_name)}</div>
         <div class="biz-info">
-          <h2>${bizName}</h2>
+          <h2>${business_name}
+            <button class="copy-chip" onclick="copyToClipboard('${glid}', this)" title="Copy GLID">📋 ${glid}</button>
+          </h2>
           <div class="biz-meta">
             <span class="biz-badge">✓ WhatsApp Business</span>
-            <span>${total} product${total !== 1 ? 's' : ''}</span>
+            <span>${numNumbers} number${numNumbers !== 1 ? 's' : ''}</span>
+            <span>·</span>
+            <span>${totalProducts} product${totalProducts !== 1 ? 's' : ''} total</span>
           </div>
         </div>
       </div>
-      ${gridHTML}
+      ${phoneGroupsHTML || `<div class="no-products">No products listed for this business yet.</div>`}
     </section>`;
     }
 
+    // ── Render ───────────────────────────────────────────────────────────────────
     function render() {
       const main = document.getElementById('main-content');
       const empty = document.getElementById('empty-state');
@@ -878,32 +1023,27 @@
 
       let rendered = 0;
 
-      const html = Object.entries(catalogData).map(([name, data]) => {
-        // filter by active tab
-        if (activeFilter !== 'all' && name.toLowerCase() !== activeFilter) return '';
+      const html = Object.entries(groupedData).map(([glid, bizGroup]) => {
+        if (activeFilter !== 'all' && glid !== activeFilter) return '';
 
-        // filter products by search
-        let products = data.products || [];
+        // When searching, skip businesses with zero matching products
         if (q) {
-          products = products.filter(p =>
-            p.name.toLowerCase().includes(q) ||
-            (p.description || '').toLowerCase().includes(q)
+          const hasMatch = Object.values(bizGroup.entries).some(entry =>
+            (entry.products || []).some(p =>
+              p.name.toLowerCase().includes(q) ||
+              (p.description || '').toLowerCase().includes(q)
+            )
           );
+          if (!hasMatch) return '';
         }
 
-        const filteredData = { ...data, products };
-
-        // if searching and a business has no matching products, hide section entirely
-        if (q && products.length === 0) return '';
-
         rendered++;
-        return buildBusinessSection(name, filteredData);
+        return buildBusinessSection(glid, bizGroup);
       }).join('');
 
       main.innerHTML = html;
       empty.style.display = rendered === 0 ? 'block' : 'none';
 
-      // attach image cycling listeners
       attachImageCyclers();
       attachLightboxListeners();
     }
@@ -927,7 +1067,6 @@
           dot.addEventListener('click', e => { e.stopPropagation(); showImg(i); });
         });
 
-        // auto-cycle on hover
         let timer;
         wrap.addEventListener('mouseenter', () => {
           timer = setInterval(() => showImg((current + 1) % images.length), 1200);
@@ -945,16 +1084,14 @@
       });
     }
 
-    // ── Tab rendering ─────────────────────────────────────────────────────────────
+    // ── Tabs (one per glid / business) ───────────────────────────────────────────
     function buildTabs() {
       const container = document.getElementById('biz-tabs');
-      const names = Object.keys(catalogData);
 
       const allTab = `<button class="biz-tab active" data-filter="all" id="tab-all">All Businesses</button>`;
-      const bizTabs = names.map(name => {
-        const filter = name.toLowerCase();
-        return `<button class="biz-tab" data-filter="${filter}" id="tab-${filter.replace(/\s+/g, '-')}">${name}</button>`;
-      }).join('');
+      const bizTabs = Object.entries(groupedData).map(([glid, { business_name }]) =>
+        `<button class="biz-tab" data-filter="${glid}" id="tab-${glid}">${business_name}</button>`
+      ).join('');
 
       container.innerHTML = allTab + bizTabs;
 
@@ -964,10 +1101,8 @@
           btn.classList.add('active');
           activeFilter = btn.dataset.filter;
           render();
-          // scroll to section if specific biz
           if (activeFilter !== 'all') {
-            const slug = activeFilter.replace(/\s+/g, '-');
-            const el = document.getElementById(`biz-${slug}`);
+            const el = document.getElementById(`biz-${activeFilter}`);
             if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
           }
         });
@@ -976,13 +1111,20 @@
 
     // ── Header stats ──────────────────────────────────────────────────────────────
     function buildStats() {
-      const businesses = Object.keys(catalogData).length;
-      const nonempty = Object.values(catalogData).filter(d => (d.products || []).length > 0).length;
-      const products = Object.values(catalogData).reduce((s, d) => s + (d.products || []).length, 0);
+      const totalBusinesses = Object.keys(groupedData).length;
+      const allEntries = Object.values(groupedData).flatMap(g => Object.values(g.entries));
+      const totalNumbers = allEntries.length;
+      const businessesWithProducts = Object.values(groupedData).filter(g =>
+        Object.values(g.entries).some(e => (e.products || []).length > 0)
+      ).length;
+      const numbersWithProducts = allEntries.filter(e => (e.products || []).length > 0).length;
+      const totalProducts = allEntries.reduce((s, e) => s + (e.products || []).length, 0);
       document.getElementById('header-stats').innerHTML = `
-    <span><span class="dot"></span> ${nonempty} / ${businesses} Catalogs Not Empty</span>
+    <span><span class="dot"></span> ${businessesWithProducts} / ${totalBusinesses} Businesses</span>
     <span>·</span>
-    <span>${products} Products</span>`;
+    <span>${numbersWithProducts} / ${totalNumbers} Numbers have Products</span>
+    <span>·</span>
+    <span>${totalProducts} Products</span>`;
     }
 
     // ── Theme Switcher ────────────────────────────────────────────────────────────
@@ -1011,10 +1153,10 @@
     });
 
     // ── Load data ─────────────────────────────────────────────────────────────────
-    fetch('result.json')
+    fetch('output.json')
       .then(r => r.json())
-      .then(data => {
-        catalogData = data;
+      .then(raw => {
+        groupedData = groupByGlid(raw);
         buildTabs();
         buildStats();
         render();
@@ -1023,7 +1165,7 @@
         document.getElementById('main-content').innerHTML = `
       <div style="text-align:center;padding:4rem;color:var(--muted);">
         <div style="font-size:2.5rem;margin-bottom:1rem;">⚠️</div>
-        <p>Could not load <code>result.json</code>. Make sure the file is in the same folder.<br>
+        <p>Could not load <code>output.json</code>. Make sure the file is in the same folder.<br>
         <small style="opacity:0.6">${err.message}</small></p>
       </div>`;
       });
